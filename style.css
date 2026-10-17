@@ -323,6 +323,7 @@ h2 { font-size: 1.05rem; margin-bottom: 16px; }
 .game-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin: 16px 0; }
 .game-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-height: 156px; background: linear-gradient(145deg,rgba(92,111,184,.24),rgba(255,255,255,.04)); border: 1px solid #ffffff24; border-radius: 18px; color: #f8fafc; padding: 16px; cursor: pointer; text-align: left; transition: transform .2s, border-color .2s; }
 .game-card:hover { transform: translateY(-3px); border-color: #38bdf8; }
+.game-card:disabled, .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
 .game-icon { font-size: 2rem; }
 .genre { font-size: .65rem; color: #a5b4fc; }
 .game-card strong { font-size: .85rem; }
@@ -345,6 +346,10 @@ dialog::backdrop { background: #020617c9; backdrop-filter: blur(8px); }
 .game-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .game-top h2 { margin: 0; }
 .game-top .secondary { width: auto; margin: 0 0 12px; }
+#difficulty-picker { display: grid; gap: 10px; margin: 12px 0 18px; }
+#difficulty-picker label { color: #cbd5e1; font-size: .85rem; }
+#difficulty { width: 100%; padding: 11px; color: #f8fafc; background: #0f172a; border: 1px solid #64748b; border-radius: 10px; }
+#shop-status { min-height: 1.5em; color: #7dd3fc; font-size: .8rem; margin-top: 10px; }
 #game-status { min-height: 48px; font-size: .85rem; color: #7dd3fc; line-height: 1.7; padding-bottom: 12px; }
 .board-grid { display: grid; grid-template-columns: repeat(var(--cols),minmax(0,1fr)); gap: 8px; }
 .tile { border: 1px solid #ffffff29; border-radius: 12px; background: #293751; color: white; font-size: 1.65rem; cursor: pointer; min-height: 54px; padding: 8px; }

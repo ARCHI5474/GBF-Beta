@@ -8,11 +8,15 @@ class Element {
 const nodes=new Map(),get=s=>{if(!nodes.has(s))nodes.set(s,new Element());return nodes.get(s);};let clock=0,uid=0;const jobs=new Map();
 const context=vm.createContext({console,Date,JSON,Number,Math:Object.assign(Object.create(Math),{random:()=>.37}),Set,Array,Object,Blob,URL,confirm:()=>true,performance:{now:()=>clock},localStorage:{getItem:()=>null,setItem:(k,v)=>get('storage').value=v},document:{querySelector:get,querySelectorAll:()=>[],createElement:()=>new Element(),body:new Element(),hidden:false,addEventListener(){}},window:{addEventListener(){},removeEventListener(){}},setTimeout:(fn,ms)=>{jobs.set(++uid,{fn,time:clock+ms});return uid;},setInterval:(fn,ms)=>{jobs.set(++uid,{fn,time:clock+ms,repeat:ms});return uid;},clearTimeout:i=>jobs.delete(i),clearInterval:i=>jobs.delete(i)});
 vm.runInContext(fs.readFileSync('script.js','utf8'),context);
+get('#difficulty').value='normal';
 const run=s=>vm.runInContext(s,context),board=get('#game-board'),controls=get('#game-controls'),status=get('#game-status');
 function tick(ms){const until=clock+ms;for(let guard=0;guard<10000;guard++){const next=[...jobs].filter(([,j])=>j.time<=until).sort((a,b)=>a[1].time-b[1].time)[0];if(!next)break;const [id,j]=next;clock=j.time;if(j.repeat)j.time+=j.repeat;else jobs.delete(id);j.fn();}clock=until;}
-function open(id){run(`openGame('${id}')`);}function click(i){board.children[i].onclick();}function submit(n){const f=controls.children[0];f.children[0].value=n;f.onsubmit({preventDefault(){}});}function ended(){return run('ended');}
-assert.equal(run('games.length'),12);
-for(const id of run('games.map(g=>g.id)')){open(id);assert.ok(board.children.length||board.innerHTML,id+' initialized');run('close()');assert.equal(jobs.size,0,id+' cleanup');}
+function open(id){run(`openGame('${id}')`);run('startGame()');}function openAt(id,level){get('#difficulty').value=level;open(id);}function click(i){board.children[i].onclick();}function submit(n){const f=controls.children[0];f.children[0].value=n;f.onsubmit({preventDefault(){}});}function ended(){return run('ended');}
+assert.equal(run('games.length'),100);
+for(const id of run("games.filter(g=>!g.secret).map(g=>g.id)")){open(id);assert.ok(board.children.length||board.innerHTML,id+' initialized');run('close()');assert.equal(jobs.size,0,id+' cleanup');}
+openAt('memory','easy');assert.equal(board.children.length,8,'easy memory uses 4 pairs');run('close()');
+openAt('memory','hard');assert.equal(board.children.length,16,'hard memory uses 8 pairs');run('close()');
+openAt('mines','hard');assert.equal(board.children.length,36,'hard mines uses a 6x6 board');run('close()');
 // Memory: discover all cards through actual flips, then match known pairs.
 open('memory');const values=[];for(let i=0;i<12;i+=2){click(i);values[i]=board.children[i].textContent;click(i+1);values[i+1]=board.children[i+1].textContent;tick(800);}for(const v of new Set(values)){const pair=values.map((x,i)=>x===v?i:-1).filter(i=>i>=0);pair.forEach(i=>{if(!board.children[i].dataset.open)click(i);});}assert.ok(ended(),'memory win');
 // Puzzle: breadth-first search proves generated layout is solvable and completes it.
@@ -29,6 +33,7 @@ open('math');for(let i=0;i<10;i++)submit(10);assert.ok(ended(),'math completion'
 open('sequence');for(let level=1;level<=5;level++){tick(400+level*750+1);for(let i=0;i<level;i++)click(1);if(level<5)tick(650);}assert.ok(ended()&&status.textContent.includes('クリア'),'sequence win');
 open('snake');tick(2500);assert.ok(ended(),'snake collision');assert.equal(jobs.size,0);
 open('mines');click(0);assert.ok(!status.textContent.includes('地雷でした'),'first mine click safe');for(let i=1;i<25&&!ended();i++)click(i);assert.ok(ended(),'mines completion');
-const data=JSON.parse(get('storage').value);assert.ok(data.plays>=24);assert.ok(data.points>0);assert.equal(Object.keys(data.records).length,12);assert.ok(run('valid(saved)'));assert.equal(run('valid({})'),false);
-open('whack');const plays=run('saved.plays');run("openGame('whack')");assert.equal(run('saved.plays'),plays+1);run('close()');assert.equal(jobs.size,0);
-console.log('PASS: all 12 games initialize, play, finish, save, and clean up; puzzle solutions and timer lifecycle verified.');
+const data=JSON.parse(get('storage').value);assert.ok(data.plays>=100);assert.ok(data.points>0);assert.equal(Object.keys(data.records).length,99);assert.equal(data.secretUnlocked,false);assert.ok(run('valid(saved)'));assert.equal(run('valid({})'),false);
+run('saved.points=500;save();stats()');get('#unlock-secret').onclick();assert.equal(run('saved.secretUnlocked'),true);assert.equal(run('saved.points'),0);open('secret');assert.ok(board.children.length,'secret game playable after purchase');run('close()');assert.equal(Object.keys(JSON.parse(get('storage').value).records).length,100);
+open('whack');const plays=run('saved.plays');run("openGame('whack');startGame()");assert.equal(run('saved.plays'),plays+1);run('close()');assert.equal(jobs.size,0);
+console.log('PASS: all 100 games, three difficulty settings, point exchange, game completion, saving, and timer cleanup verified.');
